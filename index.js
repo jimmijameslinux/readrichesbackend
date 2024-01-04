@@ -7,7 +7,7 @@ require('./db/connection');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const router = require('./routes/router');
-const path = require('path');
+// const path = require('path');
 
 const port = process.env.PORT || 3001;
 
@@ -26,9 +26,7 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(router);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-console.log(path.join(__dirname, 'uploads'));
+app.use('/uploads', express.static("./uploads"));
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

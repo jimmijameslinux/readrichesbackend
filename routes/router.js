@@ -46,14 +46,26 @@ router.post('/signup', async (req, res) => {
 });
 
 const storage = multer.diskStorage({
-    destination: 'uploads/',
-    // 
+    destination: './uploads',
     filename: function (req, file, cb) {
-      cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
-  });
-  
-  const upload = multer({ storage: storage });
+});
+
+const isImage = (req, file, cb) => {
+    const acceptedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/svg'];
+
+    if (!acceptedImageTypes.includes(file.mimetype)) {
+        return cb(new Error('Only image files are allowed!'), false);
+    }
+
+    cb(null, true);
+}
+
+const upload = multer({
+    storage: storage,
+    fileFilter: isImage
+});
 
 router.post('/dashboard', upload.fields([{ name: 'logoimage', minCount: 1 }, { name: 'mainimage', minCount: 1 }]), async (req, res) => {
     let card = new Card();
