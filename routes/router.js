@@ -46,14 +46,16 @@ router.post('/signup', async (req, res) => {
 });
 
 const storage = multer.diskStorage({
-    destination: './uploads',
+    destination: function (req, file, cb) {
+        cb(null, './uploads'); // Make sure this folder exists
+    },
     filename: function (req, file, cb) {
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
 });
 
 const isImage = (req, file, cb) => {
-    const acceptedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/svg'];
+    const acceptedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/svg', 'image/webp'];
 
     if (!acceptedImageTypes.includes(file.mimetype)) {
         return cb(new Error('Only image files are allowed!'), false);
