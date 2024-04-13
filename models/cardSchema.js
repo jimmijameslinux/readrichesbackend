@@ -6,6 +6,7 @@ const cardSchema = new mongoose.Schema({
     category: String,
     logoimage: String,
     mainimage: String,
+    video: String,
     first_color: String,
     second_color: String,
   });
