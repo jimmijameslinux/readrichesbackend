@@ -35,56 +35,30 @@ const userSubscriptions = require('../models/userSchema');
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000);
 }
-let otp = null;
-let userinputotp = null;
-let verified = false;
-
+let email = null;
+let password = null;
 router.post('/signup', async (req, res) => {
     try {
-        console.log(req.body);
+        // console.log(req.body);
         // Validate input
-        if (!req.body.email || !req.body.password) {
-            return res.status(400).json({ error: 'Email and password are required.' });
-        }
+        email = req.body.email;
+        password = req.body.password;
 
-        // Check if the email already exists
-        const existingUser = await NormalUser.User.findOne({ email: req.body.email });
-        if (existingUser) {
-            return res.status(409).json({ error: 'Email already exists.' });
-        }
 
-        // Create a new User instance
-        let user = new NormalUser.User();
+        const otp = generateOTP()
 
-        // Create a new userdashboard instance
-        let userdashboard = new userDashboard.UserDashboard();
-
-        // Set the email and hash the password
-        user.email = req.body.email;
-        user.password = await bcrypt.hash(req.body.password, 10);
-        // loginStatus
-        user.loginStatus = false;
-        // creditscore
-        user.creditscore = 2;
-
-        
-        otp = generateOTP()
-
-        sendOtpEmail(req.body.email, otp);
+        await sendOtpEmail(req.body.email, otp);
+        console.log(otp);
+        res.status(200).json({ message: 'OTP sent successfully', gotp: otp });
         // Save the user to the database
-        if(verified===true){
-        const doc = await user.save();
-        res.json(doc);
-
-        }
         // Set the user id and card id
         // userdashboard.user = doc._id;
         // userdashboard.card = cardid;
 
         // otp
- 
+
         // Save the userdashboard to the database
-        
+
 
         // if otp generated redirect to otp input page and if otp is coorect then 
         // if(req.body.otp==otp){
@@ -105,6 +79,52 @@ router.post('/signup', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+
+router.post('/otpverify', async (req, res) => {
+    const { gotp, enteredOTP } = req.body;
+    // console.log(gotp,enteredOTP);
+    const cgotp = parseInt(gotp);
+    const centeredOTP = parseInt(enteredOTP);
+    if (centeredOTP === cgotp) {
+        console.log("otp verified successfully");
+        try {
+            // Save user data into the database
+            if (!email || !password) {
+                return res.status(400).json({ error: 'Email and password are required.' });
+            }
+
+            // Check if the email already exists
+            const existingUser = await NormalUser.User.findOne({ email: email });
+            if (existingUser) {
+                return res.status(409).json({ error: 'Email already exists.' });
+            }
+
+            // Create a new User instance
+            let user = new NormalUser.User();
+
+            // Create a new userdashboard instance
+            // let userdashboard = new userDashboard.UserDashboard();
+
+            // Set the email and hash the password
+            user.email = email;
+            user.password = await bcrypt.hash(password, 10);
+            // loginStatus
+            user.loginStatus = false;
+            // creditscore
+            user.creditscore = 2;
+
+            await user.save();
+            res.status(200).json({ message: 'OTP verified successfully and user data saved' });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Failed to save user data' });
+        }
+    } else {
+        res.status(400).json({ message: 'Invalid OTP' });
+    }
+});
+
 
 router.put('/userprofile/:id',
     async (req, res) => {
@@ -714,7 +734,7 @@ router.post('/contact', async (req, res) => {
     }
 });
 
-const sendOtpEmail = (email, otp) => {
+const sendOtpEmail = async (email, otp) => {
     // Create a transporter object
     let transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -776,7 +796,7 @@ const sendOtpEmail = (email, otp) => {
     };
 
     // Send the email
-    transporter.sendMail(mailOptions, function (error, info) {
+    await transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
             console.error('Error occurred:', error);
         } else {
@@ -844,27 +864,7 @@ router.post("/orders", async (req, res) => {
 
 // // otp verification
 
-router.post('/otpverify', async (req, res) => {
-    try {
-        // console.log(req.body.phone);
-        console.log(req.body.otp);
-        // send otp
-        userinputotp = req.body.otp;
 
-        if (userinputotp == otp) {
-            res.status(200).json({ message: 'Otp verified successfully.' });
-            verified = true;
-        }
-
-        else{
-            res.status(400).json({ message: 'Otp not verified.' });
-            verified = false;
-        }
-    }
-    catch (error) {
-        res.status(500).send(error);
-    }
-});
 
 
 
